@@ -41,17 +41,9 @@
           <h1 class="text-xl font-bold tracking-tight">Teimosinha Lotofácil</h1>
           <p class="text-xs text-purple-200">Verificação Automática de Todos os Sorteios (Desde o Concurso #1)</p>
           <div class="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-400/20 border border-amber-300/30 text-[11px] font-semibold text-amber-300">
-            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-            <span id="currentCycleBadge">Ciclo Atual: Calculando...</span>
-          </div>
+          <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+          <span id="currentCycleBadge">Ciclo Atual: Calculando...</span>
         </div>
-      </div>
-      <div class="flex items-center space-x-2 bg-purple-900/50 p-1.5 rounded-xl border border-purple-400/30 text-xs">
-        <span class="px-2 py-1 rounded bg-purple-700 text-white font-medium">Status API:</span>
-        <span class="text-purple-200 flex items-center gap-1">
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Conferência Automática
-        </span>
       </div>
     </div>
   </header>
@@ -314,26 +306,30 @@
         
         const latestRes = await fetch(`${API_BASE_URL}/latest`);
         if (!latestRes.ok) throw new Error('Falha ao conectar com a API');
-        
         const latestData = await latestRes.json();
         latestContestNumber = parseInt(latestData.concurso);
-
-        document.getElementById('latestContestBadge').innerText = `#${latestContestNumber} (${latestData.data})`;
-
         const totalToFetch = latestContestNumber - startContest + 1;
-        statusText.innerText = `Carregando todos os ${totalToFetch} sorteios (Concurso 1 ao ${latestContestNumber})...`;
-        
-        // Calculate dynamic cycle based on Contest #3046 (24 draws per cycle)
-        const baseContest = 3046;
+
+        // Calculate dynamic cycle based on Contest #3822 = Cycle 34, Draw 1
+        // Reference: Contest 3822 is index 0 of Cycle 34.
+        // Formula: Cycle Number = 34 + floor((Concurso - 3822) / 24)
+        const refContest = 3822;
+        const refCycle = 34;
         const cycleLength = 24;
-        let cycleText = "Concurso anterior ao Ciclo 3046";
-        if (latestContestNumber >= baseContest) {
-          const contestDiff = latestContestNumber - baseContest;
-          const cycleNumber = Math.floor(contestDiff / cycleLength) + 1;
-          const currentDrawInCycle = (contestDiff % cycleLength) + 1;
-          cycleText = `Ciclo ${cycleNumber} (${currentDrawInCycle}/${cycleLength}º Sorteio do Ciclo)`;
+
+        function getCycleInfo(concursoNum) {
+          const diff = concursoNum - refContest;
+          const cycleOffset = Math.floor(diff / cycleLength);
+          const cycleNum = refCycle + cycleOffset;
+          // Remainder (0 to 23) -> Draw 1 to 24
+          let drawInCycle = (diff % cycleLength);
+          if (drawInCycle < 0) drawInCycle += cycleLength;
+          drawInCycle += 1;
+          return { cycleNum: cycleNum > 0 ? cycleNum : 1, drawInCycle };
         }
-        document.getElementById('currentCycleBadge').innerText = cycleText;
+
+        const latestCycleInfo = getCycleInfo(latestContestNumber);
+        document.getElementById('currentCycleBadge').innerText = `Ciclo ${latestCycleInfo.cycleNum} (${latestCycleInfo.drawInCycle}/${cycleLength}º Sorteio do Ciclo)`;
 
         let loaded = 0;
 
@@ -488,6 +484,21 @@
         emptyState.classList.add('hidden');
       }
 
+      // Cycle calculation reference constants
+      const refContest = 3822;
+      const refCycle = 34;
+      const cycleLength = 24;
+
+      function getCycleInfo(concursoNum) {
+        const diff = concursoNum - refContest;
+        const cycleOffset = Math.floor(diff / cycleLength);
+        const cycleNum = refCycle + cycleOffset;
+        let drawInCycle = (diff % cycleLength);
+        if (drawInCycle < 0) drawInCycle += cycleLength;
+        drawInCycle += 1;
+        return { cycleNum: cycleNum > 0 ? cycleNum : 1, drawInCycle };
+      }
+
       // Use DocumentFragment to batch DOM insertions for maximum speed
       const fragment = document.createDocumentFragment();
 
@@ -500,6 +511,9 @@
         if (item.hitsCount >= 11) badgeBg = 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold';
         if (item.hitsCount >= 13) badgeBg = 'bg-purple-100 text-purple-800 border-purple-300 font-bold';
         if (item.hitsCount >= 14) badgeBg = 'bg-amber-100 text-amber-900 border-amber-300 font-bold';
+
+        // Get cycle information for this specific contest
+        const cycleInfo = getCycleInfo(item.concurso);
 
         // Split 15 numbers into 3 rows of 5 numbers each (5 x 5 x 5)
         const row1 = item.dezenas.slice(0, 5);
@@ -519,15 +533,23 @@
 
         itemEl.innerHTML = `
           <div class="flex items-center space-x-3">
-            <div class="flex flex-col items-center justify-center w-16 py-1.5 rounded-xl border ${badgeBg}">
-              <span class="text-[10px] uppercase font-bold tracking-wider">Concurso</span>
-              <span class="text-sm font-extrabold">#${item.concurso}</span>
+            <!-- Large Prominent Cycle Badge -->
+            <div class="flex flex-col items-center justify-center px-3 py-1.5 rounded-xl bg-purple-900 text-white border border-purple-700 shadow-sm min-w-[70px]">
+              <span class="text-[9px] uppercase font-bold text-purple-200 tracking-wider">Ciclo ${cycleInfo.cycleNum}</span>
+              <span class="text-lg font-black leading-tight text-amber-300">${cycleInfo.drawInCycle}º</span>
+              <span class="text-[9px] text-purple-300 font-semibold">de 24</span>
             </div>
-            <div>
-              <div class="text-xs font-semibold text-slate-700">Data: ${item.data}</div>
-              <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                <i class="fa-solid fa-bullseye text-purple-500"></i>
-                Acertos: <span class="font-bold text-slate-800">${item.hitsCount} de 15</span>
+
+            <!-- Contest Badge & Basic Info -->
+            <div class="flex flex-col justify-center">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-extrabold text-slate-800">Concurso #${item.concurso}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeBg}">
+                  ${item.hitsCount} Acertos
+                </span>
+              </div>
+              <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                <span>Data: ${item.data}</span>
               </div>
             </div>
           </div>
