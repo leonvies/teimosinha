@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conferidor de Teimosinha - Histórico Completo Lotofácil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-purple-700 via-purple-800 to-indigo-900 text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-white/10 p-2.5 rounded-xl border border-white/20">
+          <i class="fa-solid fa-clover text-2xl text-amber-300"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">Teimosinha Lotofácil</h1>
+          <p class="text-xs text-purple-200">Verificação Automática de Todos os Sorteios (Desde o Concurso #1)</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 bg-purple-900/50 p-1.5 rounded-xl border border-purple-400/30 text-xs">
+        <span class="px-2 py-1 rounded bg-purple-700 text-white font-medium">Status API:</span>
+        <span class="text-purple-200 flex items-center gap-1">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Conferência Automática
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- Config & Bet Panel -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Selected Numbers Card -->
+      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-ticket text-purple-600"></i> Aposta Teimosinha Auditada
+            </h2>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-800">
+              15 Números Fixos
+            </span>
+          </div>
+
+          <!-- Numbers Display Read-only Badges -->
+          <div id="numbersGrid" class="flex flex-wrap gap-2 mb-3">
+            <!-- Dynamically populated via JS (Only 15 selected numbers) -->
+          </div>
+
+          <p class="text-xs text-slate-500">
+            * Exibição apenas dos 15 números cadastrados para esta conferência automática.
+          </p>
+        </div>
+
+        <!-- Mode & Info Controls -->
+        <div class="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div class="text-xs text-slate-600 flex items-center gap-2">
+            <span class="font-medium">Escopo:</span>
+            <select id="searchScope" onchange="runCheck()" class="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg p-1.5 font-medium">
+              <option value="all" selected>Todos os Concursos (#1 até Atual)</option>
+              <option value="50">Últimos 50 Concursos</option>
+              <option value="100">Últimos 100 Concursos</option>
+              <option value="500">Últimos 500 Concursos</option>
+            </select>
+          </div>
+
+          <div class="text-xs text-slate-500">
+            Concurso mais recente: <span id="latestContestBadge" class="font-bold text-slate-700">Carregando...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hits Breakdown Card (Clickable to open Popups) -->
+      <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl shadow-sm p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+            <h3 class="text-sm font-semibold tracking-wide uppercase text-purple-300">Total de Pontos Alcançados</h3>
+            <i class="fa-solid fa-trophy text-amber-400"></i>
+          </div>
+
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Total Sorteios Analisados:</span>
+              <span id="statTotalAnalyzed" class="font-bold text-white">0</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Total de Premiações (11-15 pts):</span>
+              <span id="statTotalWinners" class="font-bold text-emerald-400">0</span>
+            </div>
+          </div>
+
+          <!-- Interactive Points Breakdown Cards -->
+          <p class="text-[11px] text-purple-300 mb-2 font-medium">Clique no cartão de acertos para ver os sorteios:</p>
+          <div class="grid grid-cols-5 gap-1.5 text-center">
+            
+            <button onclick="openHitsModal(11)" class="bg-white/10 hover:bg-white/20 active:scale-95 transition p-2 rounded-xl border border-white/15 cursor-pointer">
+              <div class="text-[10px] text-slate-300 font-semibold">11 pts</div>
+              <div id="statHits11" class="text-sm font-bold text-white mt-0.5">0</div>
+            </button>
+
+            <button onclick="openHitsModal(12)" class="bg-white/10 hover:bg-white/20 active:scale-95 transition p-2 rounded-xl border border-white/15 cursor-pointer">
+              <div class="text-[10px] text-slate-300 font-semibold">12 pts</div>
+              <div id="statHits12" class="text-sm font-bold text-white mt-0.5">0</div>
+            </button>
+
+            <button onclick="openHitsModal(13)" class="bg-white/10 hover:bg-white/20 active:scale-95 transition p-2 rounded-xl border border-white/15 cursor-pointer">
+              <div class="text-[10px] text-slate-300 font-semibold">13 pts</div>
+              <div id="statHits13" class="text-sm font-bold text-emerald-300 mt-0.5">0</div>
+            </button>
+
+            <button onclick="openHitsModal(14)" class="bg-purple-900/60 hover:bg-purple-800/80 active:scale-95 transition p-2 rounded-xl border border-purple-400/40 cursor-pointer shadow-sm">
+              <div class="text-[10px] text-purple-300 font-semibold">14 pts</div>
+              <div id="statHits14" class="text-sm font-bold text-amber-300 mt-0.5">0</div>
+            </button>
+
+            <button onclick="openHitsModal(15)" class="bg-amber-500/30 hover:bg-amber-500/40 active:scale-95 transition p-2 rounded-xl border border-amber-400/50 cursor-pointer shadow-sm">
+              <div class="text-[10px] text-amber-300 font-semibold">15 pts</div>
+              <div id="statHits15" class="text-sm font-bold text-amber-300 mt-0.5">0</div>
+            </button>
+
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Clique em um número de pontos acima para abrir a lista.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Results Section (ListView in 5 x 5 x 5 format) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- ListView Header -->
+      <div class="p-4 bg-slate-100/80 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div>
+          <h2 class="font-semibold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-purple-600"></i> 
+            ListView - Sorteios Formatados (5 x 5 x 5)
+          </h2>
+          <p class="text-xs text-slate-500">Exibição dos 15 números sorteados em 3 linhas de 5 números cada</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <!-- Search input -->
+          <div class="relative flex-grow sm:flex-grow-0">
+            <input type="text" id="searchContestInput" onkeyup="filterResults()" placeholder="Buscar concurso..." class="w-full sm:w-40 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg py-1.5 pl-8 pr-2 focus:ring-purple-500 focus:border-purple-500">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="flex items-center space-x-1 bg-white p-1 rounded-lg border border-slate-200 text-xs">
+            <button onclick="setFilter('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 font-medium">Todos</button>
+            <button onclick="setFilter('won')" id="btnFilterWon" class="px-2.5 py-1 rounded-md text-slate-600 hover:bg-slate-100 font-medium">Premiados (11-15)</button>
+            <button onclick="setFilter('lost')" id="btnFilterLost" class="px-2.5 py-1 rounded-md text-slate-600 hover:bg-slate-100 font-medium">Sem Prêmio</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State & Progress Bar -->
+      <div id="loadingState" class="p-8 text-center bg-slate-50/50 border-b border-slate-100">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent mb-2"></div>
+        <p class="text-sm text-slate-700 font-semibold" id="loadingStatusText">Iniciando conferência automática...</p>
+        
+        <div class="max-w-md mx-auto bg-slate-200 rounded-full h-2.5 mt-3 overflow-hidden">
+          <div id="progressBar" class="bg-purple-600 h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+        </div>
+        <p id="loadingProgress" class="text-xs text-slate-400 mt-1.5">Conectando à API de loterias...</p>
+      </div>
+
+      <!-- Empty / Initial State -->
+      <div id="emptyState" class="hidden p-12 text-center text-slate-400">
+        <i class="fa-solid fa-layer-group text-4xl mb-3 text-slate-300"></i>
+        <p class="text-sm font-medium text-slate-600">Nenhum resultado disponível no momento.</p>
+      </div>
+
+      <!-- ListView Items Container -->
+      <div id="listViewContainer" class="divide-y divide-slate-100 max-h-[700px] overflow-y-auto custom-scrollbar">
+        <!-- Result Items Rendered Dynamically in 5 over 5 over 5 format -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal / Popup for Contest Hits List -->
+  <div id="hitsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+      <!-- Modal Header -->
+      <div class="p-4 bg-gradient-to-r from-purple-700 to-indigo-800 text-white flex justify-between items-center">
+        <div>
+          <h3 id="modalTitle" class="font-bold text-base flex items-center gap-2">
+            <i class="fa-solid fa-award text-amber-300"></i> Sorteios com X Pontos
+          </h3>
+          <p id="modalSubtitle" class="text-xs text-purple-200">Lista completa dos concursos correspondentes</p>
+        </div>
+        <button onclick="closeHitsModal()" class="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Contests List) -->
+      <div id="modalContent" class="p-4 overflow-y-auto custom-scrollbar space-y-3 flex-grow max-h-[60vh]">
+        <!-- List inserted by JS -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 text-right">
+        <button onclick="closeHitsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-xs rounded-lg transition">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+    <div class="max-w-6xl mx-auto px-4 text-center text-xs text-slate-400">
+      Teimosinha Lotofácil • Conferência Automática via API Loterias Caixa.
+    </div>
+  </footer>
+
+  <script>
+    // Fixed user numbers for audit
+    const currentBet = [1, 2, 3, 4, 7, 8, 9, 10, 11, 13, 15, 19, 23, 24, 25];
+    let fetchedResults = [];
+    let currentFilter = 'all';
+    let latestContestNumber = null;
+    let isFetching = false;
+
+    // API Base URL
+    const API_BASE_URL = 'https://loteriascaixa-api.herokuapp.com/api/lotofacil';
+
+    // Automatic start on page load
+    window.onload = function() {
+      try {
+        renderNumbersGrid();
+        runCheck();
+      } catch (err) {
+        console.error("Error during initial startup:", err);
+      }
+    };
+
+    // Render Read-only 15 Numbers Display (Audit Mode)
+    function renderNumbersGrid() {
+      const container = document.getElementById('numbersGrid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      currentBet.forEach(num => {
+        const numFormatted = String(num).padStart(2, '0');
+        const badge = document.createElement('div');
+        badge.className = 'w-9 h-9 rounded-lg font-bold text-sm flex items-center justify-center bg-purple-600 text-white shadow-sm border border-purple-400 select-none';
+        badge.innerText = numFormatted;
+        container.appendChild(badge);
+      });
+    }
+
+    // Main Check Trigger
+    async function runCheck() {
+      if (isFetching) return;
+      isFetching = true;
+
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      const listViewContainer = document.getElementById('listViewContainer');
+      const statusText = document.getElementById('loadingStatusText');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('loadingProgress');
+
+      loadingState.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      listViewContainer.innerHTML = '';
+      fetchedResults = [];
+      updateStats();
+
+      const scope = document.getElementById('searchScope').value;
+
+      try {
+        statusText.innerText = 'Consultando concurso mais recente...';
+        progressBar.style.width = '10%';
+        
+        const latestRes = await fetch(`${API_BASE_URL}/latest`);
+        if (!latestRes.ok) throw new Error('Falha ao conectar com a API');
+        
+        const latestData = await latestRes.json();
+        latestContestNumber = parseInt(latestData.concurso);
+
+        document.getElementById('latestContestBadge').innerText = `#${latestContestNumber} (${latestData.data})`;
+
+        let startContest = 1;
+        if (scope !== 'all') {
+          const count = parseInt(scope);
+          startContest = Math.max(1, latestContestNumber - count + 1);
+        }
+
+        const totalToFetch = latestContestNumber - startContest + 1;
+        statusText.innerText = `Carregando ${totalToFetch} sorteios (Concurso ${startContest} ao ${latestContestNumber})...`;
+        
+        // Fetch items sequentially/in chunks
+        let loaded = 0;
+        const rawList = [];
+
+        // If 'all' scope, fetch latest directly first for quick feedback, or batch fetch
+        if (latestData && latestData.concurso >= startContest) {
+          rawList.push(latestData);
+          loaded++;
+        }
+
+        // Fetch remaining in parallel batches
+        const idsToFetch = [];
+        for (let c = latestContestNumber - 1; c >= startContest; c--) {
+          idsToFetch.push(c);
+        }
+
+        const BATCH_SIZE = 15;
+        for (let i = 0; i < idsToFetch.length; i += BATCH_SIZE) {
+          const batch = idsToFetch.slice(i, i + BATCH_SIZE);
+          const promises = batch.map(c => 
+            fetch(`${API_BASE_URL}/${c}`)
+              .then(res => res.ok ? res.json() : null)
+              .catch(() => null)
+          );
+
+          const results = await Promise.all(promises);
+          results.forEach(item => {
+            if (item && item.concurso) {
+              rawList.push(item);
+            }
+          });
+
+          loaded += batch.length;
+          const percent = Math.min(100, Math.round((loaded / totalToFetch) * 100));
+          progressBar.style.width = `${percent}%`;
+          progressText.innerText = `Processados ${loaded} de ${totalToFetch} sorteios (${percent}%)`;
+        }
+
+        // Sort contests descending
+        rawList.sort((a, b) => parseInt(b.concurso) - parseInt(a.concurso));
+
+        // Process and compare each draw with current bet
+        fetchedResults = rawList.map(item => {
+          const drawn = (item.dezenas || []).map(n => parseInt(n));
+          const hits = drawn.filter(n => currentBet.includes(n));
+          const hitsCount = hits.length;
+
+          return {
+            concurso: item.concurso,
+            data: item.data || 'N/D',
+            dezenas: drawn,
+            hits: hits,
+            hitsCount: hitsCount,
+            isWinner: hitsCount >= 11
+          };
+        });
+
+        loadingState.classList.add('hidden');
+        updateStats();
+        renderListView();
+
+      } catch (err) {
+        console.error(err);
+        statusText.innerText = 'Erro ao carregar dados da API.';
+        progressText.innerText = 'Verifique sua conexão ou tente novamente mais tarde.';
+        progressBar.style.width = '100%';
+        progressBar.classList.replace('bg-purple-600', 'bg-red-500');
+      } finally {
+        isFetching = false;
+      }
+    }
+
+    // Update Top Summary Stats
+    function updateStats() {
+      const totalAnalyzed = fetchedResults.length;
+      let winners = 0;
+      let hits11 = 0, hits12 = 0, hits13 = 0, hits14 = 0, hits15 = 0;
+
+      fetchedResults.forEach(r => {
+        if (r.hitsCount >= 11) winners++;
+        if (r.hitsCount === 11) hits11++;
+        if (r.hitsCount === 12) hits12++;
+        if (r.hitsCount === 13) hits13++;
+        if (r.hitsCount === 14) hits14++;
+        if (r.hitsCount === 15) hits15++;
+      });
+
+      document.getElementById('statTotalAnalyzed').innerText = totalAnalyzed;
+      document.getElementById('statTotalWinners').innerText = winners;
+      document.getElementById('statHits11').innerText = hits11;
+      document.getElementById('statHits12').innerText = hits12;
+      document.getElementById('statHits13').innerText = hits13;
+      document.getElementById('statHits14').innerText = hits14;
+      document.getElementById('statHits15').innerText = hits15;
+    }
+
+    // Render ListView with 5 over 5 over 5 Format
+    function renderListView() {
+      const container = document.getElementById('listViewContainer');
+      const emptyState = document.getElementById('emptyState');
+      const searchVal = (document.getElementById('searchContestInput').value || '').trim();
+
+      container.innerHTML = '';
+
+      let filtered = fetchedResults.filter(item => {
+        if (currentFilter === 'won' && !item.isWinner) return false;
+        if (currentFilter === 'lost' && item.isWinner) return false;
+        if (searchVal && !String(item.concurso).includes(searchVal)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      filtered.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'p-4 hover:bg-slate-50 transition border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4';
+
+        // Badge color according to score
+        let badgeBg = 'bg-slate-100 text-slate-600 border-slate-200';
+        if (item.hitsCount >= 11) badgeBg = 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold';
+        if (item.hitsCount >= 13) badgeBg = 'bg-purple-100 text-purple-800 border-purple-300 font-bold';
+        if (item.hitsCount >= 14) badgeBg = 'bg-amber-100 text-amber-900 border-amber-300 font-bold';
+
+        // Split 15 numbers into 3 rows of 5 numbers each (5 x 5 x 5)
+        const row1 = item.dezenas.slice(0, 5);
+        const row2 = item.dezenas.slice(5, 10);
+        const row3 = item.dezenas.slice(10, 15);
+
+        const buildRowHtml = (nums) => {
+          return nums.map(num => {
+            const isHit = currentBet.includes(num);
+            const formatted = String(num).padStart(2, '0');
+            const bgClass = isHit 
+              ? 'bg-purple-600 text-white font-bold border-purple-700 shadow-sm' 
+              : 'bg-slate-100 text-slate-500 border-slate-200 font-medium';
+            return `<span class="w-7 h-7 flex items-center justify-center text-xs rounded-md border ${bgClass}">${formatted}</span>`;
+          }).join('');
+        };
+
+        itemEl.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <div class="flex flex-col items-center justify-center w-16 py-1.5 rounded-xl border ${badgeBg}">
+              <span class="text-[10px] uppercase font-bold tracking-wider">Concurso</span>
+              <span class="text-sm font-extrabold">#${item.concurso}</span>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-slate-700">Data: ${item.data}</div>
+              <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                <i class="fa-solid fa-bullseye text-purple-500"></i>
+                Acertos: <span class="font-bold text-slate-800">${item.hitsCount} de 15</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 x 5 x 5 Matrix Display -->
+          <div class="flex flex-col gap-1 bg-slate-50 p-2 rounded-xl border border-slate-200">
+            <div class="flex gap-1 justify-center">${buildRowHtml(row1)}</div>
+            <div class="flex gap-1 justify-center">${buildRowHtml(row2)}</div>
+            <div class="flex gap-1 justify-center">${buildRowHtml(row3)}</div>
+          </div>
+        `;
+
+        container.appendChild(itemEl);
+      });
+    }
+
+    // Filter switching
+    function setFilter(filterType) {
+      currentFilter = filterType;
+      
+      const btnAll = document.getElementById('btnFilterAll');
+      const btnWon = document.getElementById('btnFilterWon');
+      const btnLost = document.getElementById('btnFilterLost');
+
+      [btnAll, btnWon, btnLost].forEach(btn => {
+        btn.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:bg-slate-100 font-medium';
+      });
+
+      if (filterType === 'all') btnAll.className = 'px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 font-medium';
+      if (filterType === 'won') btnWon.className = 'px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 font-medium';
+      if (filterType === 'lost') btnLost.className = 'px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 font-medium';
+
+      renderListView();
+    }
+
+    function filterResults() {
+      renderListView();
+    }
+
+    // Open Modal for Specific Point Target (11, 12, 13, 14, 15)
+    function openHitsModal(pointsTarget) {
+      const modal = document.getElementById('hitsModal');
+      const title = document.getElementById('modalTitle');
+      const subtitle = document.getElementById('modalSubtitle');
+      const content = document.getElementById('modalContent');
+
+      const matchingContests = fetchedResults.filter(item => item.hitsCount === pointsTarget);
+
+      title.innerHTML = `<i class="fa-solid fa-trophy text-amber-300"></i> Sorteios com ${pointsTarget} Pontos`;
+      subtitle.innerText = `Total de ${matchingContests.length} concurso(s) com exatamente ${pointsTarget} acertos`;
+
+      if (matchingContests.length === 0) {
+        content.innerHTML = `
+          <div class="text-center py-8 text-slate-400">
+            <i class="fa-regular fa-face-frown text-3xl mb-2 text-slate-300"></i>
+            <p class="text-sm font-medium">Nenhum concurso registrado com ${pointsTarget} acertos.</p>
+          </div>
+        `;
+      } else {
+        content.innerHTML = matchingContests.map(item => `
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+            <div>
+              <span class="font-bold text-purple-700 text-sm">Concurso #${item.concurso}</span>
+              <span class="text-xs text-slate-500 ml-2">(${item.data})</span>
+            </div>
+            <div class="text-xs font-semibold px-2.5 py-1 rounded-md bg-purple-100 text-purple-800">
+              ${item.hitsCount} Acertos
+            </div>
+          </div>
+        `).join('');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeHitsModal() {
+      document.getElementById('hitsModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
