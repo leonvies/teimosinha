@@ -283,7 +283,8 @@
         container.appendChild(badge);
       });
     }
-    // Main Check Trigger
+
+    // Main Check Trigger with Dynamic Live Updates per Batch
     async function runCheck() {
       if (isFetching) return;
       isFetching = true;
@@ -305,7 +306,7 @@
 
       try {
         statusText.innerText = 'Consultando concurso mais recente...';
-        progressBar.style.width = '10%';
+        progressBar.style.width = '5%';
         
         const latestRes = await fetch(`${API_BASE_URL}/latest`);
         if (!latestRes.ok) throw new Error('Falha ao conectar com a API');
@@ -319,11 +320,23 @@
         statusText.innerText = `Carregando todos os ${totalToFetch} sorteios (Concurso 1 ao ${latestContestNumber})...`;
         
         let loaded = 0;
-        const rawList = [];
 
+        // Process latest contest first
         if (latestData && latestData.concurso >= startContest) {
-          rawList.push(latestData);
+          const drawn = (latestData.dezenas || []).map(n => parseInt(n));
+          const hits = drawn.filter(n => currentBet.includes(n));
+          const hitsCount = hits.length;
+
+          fetchedResults.push({
+            concurso: parseInt(latestData.concurso),
+            data: latestData.data || 'N/D',
+            dezenas: drawn,
+            hits: hits,
+            hitsCount: hitsCount,
+            isWinner: hitsCount >= 11
+          });
           loaded++;
+          updateStats();
         }
 
         const idsToFetch = [];
@@ -341,36 +354,38 @@
           );
 
           const results = await Promise.all(promises);
+          
           results.forEach(item => {
             if (item && item.concurso) {
-              rawList.push(item);
+              const drawn = (item.dezenas || []).map(n => parseInt(n));
+              const hits = drawn.filter(n => currentBet.includes(n));
+              const hitsCount = hits.length;
+
+              fetchedResults.push({
+                concurso: parseInt(item.concurso),
+                data: item.data || 'N/D',
+                dezenas: drawn,
+                hits: hits,
+                hitsCount: hitsCount,
+                isWinner: hitsCount >= 11
+              });
             }
           });
 
           loaded += batch.length;
+          
+          // Update stats dynamically in real-time after each batch!
+          updateStats();
+
           const percent = Math.min(100, Math.round((loaded / totalToFetch) * 100));
-          progressBar.style.width = `${percent}`;
+          progressBar.style.width = `${percent}%`;
           progressText.innerText = `Processados ${loaded} de ${totalToFetch} sorteios (${percent}%)`;
+          
+          // Yield to UI thread to allow dynamic DOM rendering
+          await new Promise(resolve => setTimeout(resolve, 0));
         }
 
-        rawList.sort((a, b) => parseInt(b.concurso) - parseInt(a.concurso));
-
-        fetchedResults = rawList.map(item => {
-          const drawn = (item.dezenas || []).map(n => parseInt(n));
-          const hits = drawn.filter(n => currentBet.includes(n));
-          const hitsCount = hits.length;
-
-          return {
-            concurso: parseInt(item.concurso),
-            data: item.data || 'N/D',
-            dezenas: drawn,
-            hits: hits,
-            hitsCount: hitsCount,
-            isWinner: hitsCount >= 11
-          };
-        });
-
-        // Ensure chronological sorting descending (latest first)
+        // Ensure sorted descending (latest contest first)
         fetchedResults.sort((a, b) => b.concurso - a.concurso);
 
         loadingState.classList.add('hidden');
@@ -411,15 +426,17 @@
       document.getElementById('statHits14').innerText = hits14;
       document.getElementById('statHits15').innerText = hits15;
 
+      // Sort temporarily to calculate delay from most recent contest
+      const sortedTemp = [...fetchedResults].sort((a, b) => b.concurso - a.concurso);
+
       // Calculate delay since last prize (11+ points) starting from the most recent contest
       let delayDraws = 0;
-      if (fetchedResults.length > 0) {
-        // Find index of first winner from the top (sorted descending: newest first)
-        const firstWinnerIndex = fetchedResults.findIndex(r => r.isWinner);
+      if (sortedTemp.length > 0) {
+        const firstWinnerIndex = sortedTemp.findIndex(r => r.isWinner);
         if (firstWinnerIndex === -1) {
-          delayDraws = totalAnalyzed; // No prize found in all analyzed draws
+          delayDraws = totalAnalyzed;
         } else {
-          delayDraws = firstWinnerIndex; // Number of draws since the most recent prize
+          delayDraws = firstWinnerIndex;
         }
       }
       document.getElementById('statDelayDraws').innerText = `${delayDraws} sorteios`;
@@ -429,7 +446,7 @@
         const avg = (totalAnalyzed / winners).toFixed(1);
         document.getElementById('statAverageFrequency').innerText = `1 a cada ${avg} sorteios`;
       } else {
-        document.getElementById('statAverageFrequency').innerText = 'N/A';
+        document.getElementById('statAverageFrequency').innerText = '-';
       }
     }
 
