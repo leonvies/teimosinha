@@ -83,13 +83,8 @@
         <!-- Mode & Info Controls -->
         <div class="pt-4 mt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
           <div class="text-xs text-slate-600 flex items-center gap-2">
-            <span class="font-medium">Escopo:</span>
-            <select id="searchScope" onchange="runCheck()" class="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg p-1.5 font-medium">
-              <option value="all" selected>Todos os Concursos (#1 até Atual)</option>
-              <option value="50">Últimos 50 Concursos</option>
-              <option value="100">Últimos 100 Concursos</option>
-              <option value="500">Últimos 500 Concursos</option>
-            </select>
+            <span class="font-medium text-purple-700"><i class="fa-solid fa-database"></i> Escopo:</span>
+            <span class="bg-purple-50 text-purple-800 border border-purple-200 px-2.5 py-1 rounded-lg font-semibold">Do Concurso #1 até o Atual</span>
           </div>
 
           <div class="text-xs text-slate-500">
@@ -101,19 +96,27 @@
       <!-- Hits Breakdown Card (Clickable to open Popups) -->
       <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl shadow-sm p-5 flex flex-col justify-between">
         <div>
-          <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+          <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/10">
             <h3 class="text-sm font-semibold tracking-wide uppercase text-purple-300">Total de Pontos Alcançados</h3>
             <i class="fa-solid fa-trophy text-amber-400"></i>
           </div>
 
-          <div class="space-y-2 mb-4">
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Total Sorteios Analisados:</span>
-              <span id="statTotalAnalyzed" class="font-bold text-white">0</span>
+          <div class="grid grid-cols-2 gap-2 mb-3 bg-white/5 p-2.5 rounded-xl border border-white/10">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Sorteios Analisados:</span>
+              <span id="statTotalAnalyzed" class="font-bold text-white text-xs">0</span>
             </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Total de Premiações (11-15 pts):</span>
-              <span id="statTotalWinners" class="font-bold text-emerald-400">0</span>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Total de Prêmios (11+):</span>
+              <span id="statTotalWinners" class="font-bold text-emerald-400 text-xs">0</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Sem prêmio há:</span>
+              <span id="statDelayDraws" class="font-bold text-amber-300 text-xs">- sorteios</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Média de Prêmios:</span>
+              <span id="statAverageFrequency" class="font-bold text-purple-300 text-xs">-</span>
             </div>
           </div>
 
@@ -149,7 +152,7 @@
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+        <div class="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
           <span>Clique em um número de pontos acima para abrir a lista.</span>
         </div>
       </div>
@@ -163,9 +166,8 @@
         <div>
           <h2 class="font-semibold text-slate-800 text-base flex items-center gap-2">
             <i class="fa-solid fa-list-check text-purple-600"></i> 
-            ListView - Sorteios Formatados (5 x 5 x 5)
+            Historico de Sorteios
           </h2>
-          <p class="text-xs text-slate-500">Exibição dos 15 números sorteados em 3 linhas de 5 números cada</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
@@ -203,7 +205,7 @@
 
       <!-- ListView Items Container -->
       <div id="listViewContainer" class="divide-y divide-slate-100 max-h-[700px] overflow-y-auto custom-scrollbar">
-        <!-- Result Items Rendered Dynamically in 5 over 5 over 5 format -->
+        <!-- Result Items Rendered Dynamically only after process completion -->
       </div>
     </div>
 
@@ -281,7 +283,6 @@
         container.appendChild(badge);
       });
     }
-
     // Main Check Trigger
     async function runCheck() {
       if (isFetching) return;
@@ -300,7 +301,7 @@
       fetchedResults = [];
       updateStats();
 
-      const scope = document.getElementById('searchScope').value;
+      const startContest = 1;
 
       try {
         statusText.innerText = 'Consultando concurso mais recente...';
@@ -314,32 +315,23 @@
 
         document.getElementById('latestContestBadge').innerText = `#${latestContestNumber} (${latestData.data})`;
 
-        let startContest = 1;
-        if (scope !== 'all') {
-          const count = parseInt(scope);
-          startContest = Math.max(1, latestContestNumber - count + 1);
-        }
-
         const totalToFetch = latestContestNumber - startContest + 1;
-        statusText.innerText = `Carregando ${totalToFetch} sorteios (Concurso ${startContest} ao ${latestContestNumber})...`;
+        statusText.innerText = `Carregando todos os ${totalToFetch} sorteios (Concurso 1 ao ${latestContestNumber})...`;
         
-        // Fetch items sequentially/in chunks
         let loaded = 0;
         const rawList = [];
 
-        // If 'all' scope, fetch latest directly first for quick feedback, or batch fetch
         if (latestData && latestData.concurso >= startContest) {
           rawList.push(latestData);
           loaded++;
         }
 
-        // Fetch remaining in parallel batches
         const idsToFetch = [];
         for (let c = latestContestNumber - 1; c >= startContest; c--) {
           idsToFetch.push(c);
         }
 
-        const BATCH_SIZE = 15;
+        const BATCH_SIZE = 25;
         for (let i = 0; i < idsToFetch.length; i += BATCH_SIZE) {
           const batch = idsToFetch.slice(i, i + BATCH_SIZE);
           const promises = batch.map(c => 
@@ -357,21 +349,19 @@
 
           loaded += batch.length;
           const percent = Math.min(100, Math.round((loaded / totalToFetch) * 100));
-          progressBar.style.width = `${percent}%`;
+          progressBar.style.width = `${percent}`;
           progressText.innerText = `Processados ${loaded} de ${totalToFetch} sorteios (${percent}%)`;
         }
 
-        // Sort contests descending
         rawList.sort((a, b) => parseInt(b.concurso) - parseInt(a.concurso));
 
-        // Process and compare each draw with current bet
         fetchedResults = rawList.map(item => {
           const drawn = (item.dezenas || []).map(n => parseInt(n));
           const hits = drawn.filter(n => currentBet.includes(n));
           const hitsCount = hits.length;
 
           return {
-            concurso: item.concurso,
+            concurso: parseInt(item.concurso),
             data: item.data || 'N/D',
             dezenas: drawn,
             hits: hits,
@@ -379,6 +369,9 @@
             isWinner: hitsCount >= 11
           };
         });
+
+        // Ensure chronological sorting descending (latest first)
+        fetchedResults.sort((a, b) => b.concurso - a.concurso);
 
         loadingState.classList.add('hidden');
         updateStats();
@@ -395,7 +388,7 @@
       }
     }
 
-    // Update Top Summary Stats
+    // Update Top Summary Stats & Advanced Analytics (Delay & Average Frequency)
     function updateStats() {
       const totalAnalyzed = fetchedResults.length;
       let winners = 0;
@@ -417,6 +410,27 @@
       document.getElementById('statHits13').innerText = hits13;
       document.getElementById('statHits14').innerText = hits14;
       document.getElementById('statHits15').innerText = hits15;
+
+      // Calculate delay since last prize (11+ points) starting from the most recent contest
+      let delayDraws = 0;
+      if (fetchedResults.length > 0) {
+        // Find index of first winner from the top (sorted descending: newest first)
+        const firstWinnerIndex = fetchedResults.findIndex(r => r.isWinner);
+        if (firstWinnerIndex === -1) {
+          delayDraws = totalAnalyzed; // No prize found in all analyzed draws
+        } else {
+          delayDraws = firstWinnerIndex; // Number of draws since the most recent prize
+        }
+      }
+      document.getElementById('statDelayDraws').innerText = `${delayDraws} sorteios`;
+
+      // Calculate average frequency of winning a prize (1 a cada X sorteios)
+      if (winners > 0) {
+        const avg = (totalAnalyzed / winners).toFixed(1);
+        document.getElementById('statAverageFrequency').innerText = `1 a cada ${avg} sorteios`;
+      } else {
+        document.getElementById('statAverageFrequency').innerText = 'N/A';
+      }
     }
 
     // Render ListView with 5 over 5 over 5 Format
@@ -440,6 +454,9 @@
       } else {
         emptyState.classList.add('hidden');
       }
+
+      // Use DocumentFragment to batch DOM insertions for maximum speed
+      const fragment = document.createDocumentFragment();
 
       filtered.forEach(item => {
         const itemEl = document.createElement('div');
@@ -490,8 +507,10 @@
           </div>
         `;
 
-        container.appendChild(itemEl);
+        fragment.appendChild(itemEl);
       });
+
+      container.appendChild(fragment);
     }
 
     // Filter switching
